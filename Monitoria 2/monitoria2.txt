@@ -1,0 +1,170 @@
+Monitoria 2 de IHS - 17/08/22
+
+TÓPICOS
+- Program memory Layout
+
+Arquitetura de von Neumann -> dados e instruções na mesma memória
+.TEXT   -> espaço dedicado na memória para instruções
+.DATA   -> '' '' '' para dados
+        -> pode ser dividido em dados inicializados e não-inicializados
+        -> variáveis locais inicializadas ficam na stack
+        -> memória dinâmica fica na heap
+
+call main
+decrementa o endereço esp
+stack frame
+
+- Global variable
+- Local variable
+- The stack
+- Function parameters
+
+Uma função em assembly é uma rotina com label, que pode ser chamada com call
+Os parâmetros de uma função são colocados na pilha, e usados na label
+
+- Interrupts
+
+É um evento que faz o processador interromper a execução de um programa, e executar uma rotina
+A IVT é uma tabela com ponteiros para as instruções
+
+Executando interrupção
+1o passo: Obtem o número da interrupção
+2o passo: Salvar o estado do processador (troca de contexto)
+3o passo: Buscar novo CS:IP na IVT
+4o passo: 
+
+Flags do godbolt:
+-m32
+-O0 -> flag pra não otimizar código
+C to x86-64 gcc 12.1
+
+C:
+int main() {
+    return 0;
+}
+ASM:
+main:
+        push    ebp
+        mov     ebp, esp
+        mov     eax, 0
+        pop     ebp
+        ret
+
+C:
+char string[] = "hello world";
+int a = 10;
+long long b = 150;
+char c = 7;
+int main() {
+    char x[] = "mateus";
+    char innt=1;
+    char intt=2;
+    return 0;
+}
+ASM:
+string:
+        .string "hello world"
+a:
+        .long   10
+b:
+        .long   150
+        .long   0
+c:
+        .byte   7
+main:
+        push    ebp
+        mov     ebp, esp
+        sub     esp, 16
+        mov     DWORD PTR [ebp-9], 1702125933
+        mov     DWORD PTR [ebp-6], 7566693
+        mov     BYTE PTR [ebp-1], 1
+        mov     BYTE PTR [ebp-2], 2
+        mov     eax, 0
+        leave
+        ret
+
+C:
+int main() {
+    int c = 20, d = 25, e = 30;
+    return 0;
+}
+ASM:
+main:
+        push    ebp
+        mov     ebp, esp
+        sub     esp, 16
+        mov     DWORD PTR [ebp-4], 20
+        mov     DWORD PTR [ebp-8], 25
+        mov     DWORD PTR [ebp-12], 30
+        mov     eax, 0
+        leave
+        ret
+
+Vamos guardar "c", "d" e "e"
+o esp é dec em 16, o que libera 4 espaços para guardarmos nossas variáveis locais
+não precisávamos de 4 espaços, mas o compilador tem comportamento "indefinido" ao alocar memória
+
+C:
+int main() {
+    int c = 20, d = 25, e = 30;
+    int f, h = 17;
+    f = c + d;
+    return 0;
+}
+ASM:
+main:
+        push    ebp
+        mov     ebp, esp
+        sub     esp, 32
+        mov     DWORD PTR [ebp-4], 20
+        mov     DWORD PTR [ebp-8], 25
+        mov     DWORD PTR [ebp-12], 30
+        mov     DWORD PTR [ebp-16], 17
+        mov     edx, DWORD PTR [ebp-4]
+        mov     eax, DWORD PTR [ebp-8]
+        add     eax, edx
+        mov     DWORD PTR [ebp-20], eax
+        mov     eax, 0
+        leave
+        ret
+
+C:
+#include <stdio.h>
+
+int somacom50(int a, int b) {
+    int l = 50;
+    return a + b + l;
+}
+
+int main() {
+    int c = 20, d = 25;
+    c = somacom50(c,d);
+    return c;
+}
+ASM:
+somacom50:
+        push    ebp
+        mov     ebp, esp
+        sub     esp, 16
+        mov     DWORD PTR [ebp-4], 50
+        mov     edx, DWORD PTR [ebp+8]
+        mov     eax, DWORD PTR [ebp+12]
+        add     edx, eax
+        mov     eax, DWORD PTR [ebp-4]
+        add     eax, edx
+        leave
+        ret
+main:
+        push    ebp
+        mov     ebp, esp
+        sub     esp, 16
+        mov     DWORD PTR [ebp-4], 20
+        mov     DWORD PTR [ebp-8], 25
+        push    DWORD PTR [ebp-8]
+        push    DWORD PTR [ebp-4]
+        call    somacom50
+        add     esp, 8     ; ele podia ter dado 2 pops em vez de add 8 na ESP, mas o que restou na função é lixo de memória, então não interessa ele ser sobescrito
+        mov     DWORD PTR [ebp-4], eax
+        mov     eax, DWORD PTR [ebp-4]
+        leave
+        ret
