@@ -2,6 +2,7 @@ ORG 0x7C00
 BITS 16
     jmp start
 
+msg: db "hello, world!", 0x0D, 0x0A, 0
 
 start:
 
@@ -10,23 +11,17 @@ start:
     mov es, ax
     mov ss, ax
 
-    ;; Pegando input do teclado e colocando ele em al
-    call get_keyboard_input
+    ;; configurando IVT
+    ;; print_string é a label / ip
+    ;; 40H chega no 0x100
+    mov di, 0x100
+    mov word[di], print_string
+    mov word[di+2], cs
 
-    ;; Salvando char em uma região de memória
-    push bp
-    mov bp, sp
-    sub sp, 8
-    mov BYTE[bp-1], al
-
-    ;; print number?
-    movsx bx, BYTE[bp-1]
+    mov bx, msg
     push bx
-    call print_number
-
-    ;; Printando o char
-
-
+    int 0x40 ;;40H
+    
 end:
     jmp $ ;halt
 
@@ -50,7 +45,7 @@ print_string:
     ;; bp+2 -> offset retorno
     ;; bp+4 -> primeiro parametro
     ;; está de 2 em 2 pq modo real é 16 bits. no modo protegido seria de 4 em 4 bytes
-    mov si, [bp+4]
+    mov si, [bp+8]
         
     .loop:
         lodsb
@@ -63,21 +58,6 @@ print_string:
         pop bp  ;;devolver bp
         ret 2   ;; n_parametros * 2 (modo real)
 
-print_string_simples:
-    ;;mov si, hello
-    .loop:
-        lodsb
-
-        cmp al, 0
-        je .done
-
-        mov ah, 0x0E
-        int 10h ;; instruções de vídeo
-
-        jmp .loop
-
-    .done:
-        ret
 print_number:
     push bp
     mov bp, sp
