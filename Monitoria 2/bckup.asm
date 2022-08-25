@@ -21,16 +21,12 @@ start:
     ;; get string
     ;; di --> string
     ;; cx = tamanho max da string
+    ;; Seta argumentos para input 
     mov di, parameter                    
     mov cx, 30                       
-    call get_string
+    call input_string
 
-    push bp
-    mov bp, sp
-    sub sp, 16
-    mov word[bp-8], parameter
-    ;; offset = 8
-    mov ax, 8
+    
 
     int 0x40
     
@@ -38,15 +34,13 @@ end:
     jmp $ ;halt
 
 print_string:    
-    ;mov bp, parameter
-    mov bx, bp
-    sub bx, ax
-    mov bp, word[bx]
+    mov bp, parameter
     push cx
 
     ;; Get cursor position and shape interruption
     ;; CH = Start scan line, CL = End scan line, DH = Row, DL = Column 
     mov ah, 0x3
+    ;inc DH
     int 0x10
     pop cx
 
@@ -63,7 +57,7 @@ print_string:
     call print_char
 ret
 
-get_string:
+input_string:
     ;; Read key press interruption
     ;; Passa a tecla pressionada para o AL
     ;; AL também é usado em print_char
@@ -74,7 +68,7 @@ get_string:
     cmp al, 13
     je return
     stosb
-    loop get_string
+    loop input_string
 ret
 
 return:                                   
@@ -88,6 +82,11 @@ print_char:
     mov bh, 0
     int 10h
     popa
+ret
+
+fill_string:
+    stosb
+    loop fill_string
 ret
 
     ;; assinatura de boot
