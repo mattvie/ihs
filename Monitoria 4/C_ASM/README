@@ -1,0 +1,4 @@
+Compila com:
+    $ nasm -f elf32 product.asm -o productObject 
+E depois: 
+    $ clang -m32 asm_call.c productObject -o main

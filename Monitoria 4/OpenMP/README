@@ -1,0 +1,2 @@
+Para compilar:
+    $  clang++ -fopenmp q1.cpp
