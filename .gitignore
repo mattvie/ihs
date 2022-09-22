@@ -53,3 +53,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Compacted files
+*.zip
+*.7z
+*.tar
+*.wim
